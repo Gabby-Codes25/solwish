@@ -1,13 +1,16 @@
-'use client'
+'use client';
 
-import { useEffect, useState, Suspense, lazy } from 'react';
+import React from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import SolanaWalletProvider from '../components/WalletProvider'; // Import the custom wallet provider
+import SolanaWalletProvider from '../components/WalletProvider';
 import Lazyload from '../components/lazyload';
 
-const Payment = lazy(() => import('../components/payment'));
+
+// Payment component will be lazy-loaded
+const Payment = React.lazy(() => import('../components/payment'));
 
 interface WishlistItem {
   name: string;
@@ -20,8 +23,7 @@ const Page = () => {
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [recipientAddress, setRecipientAddress] = useState<string>(''); // State for recipient address
-  const searchParams = useSearchParams();
-  const { publicKey } = useWallet(); // Use wallet context
+  const searchParams = useSearchParams(); // This needs to be inside Suspense
 
   useEffect(() => {
     const encodedWishlist = searchParams.get('wishlist');
@@ -77,34 +79,35 @@ const Page = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl">
-          <h1 className="text-xl md:text-2xl font-bold mb-6">Shared Wishlist</h1>
+        {/* Suspense boundary wrapping the wishlist and useSearchParams */}
+        <Suspense fallback={<Lazyload />}>
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl">
+            <h1 className="text-xl md:text-2xl font-bold mb-6">Shared Wishlist</h1>
 
-          <ul className="list-none p-0">
-            {wishlist.map((item, index) => (
-              <li
-                key={index}
-                className={`flex items-center mb-2 ${checkedItems.has(index) ? 'line-through text-gray-500' : ''}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={checkedItems.has(index)}
-                  onChange={() => handleCheckboxChange(index)}
-                  className="mr-2"
-                />
-                <span className="flex-1">{item.name}: {item.price} Sol</span>
-              </li>
-            ))}
-          </ul>
+            <ul className="list-none p-0">
+              {wishlist.map((item, index) => (
+                <li
+                  key={index}
+                  className={`flex items-center mb-2 ${checkedItems.has(index) ? 'line-through text-gray-500' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checkedItems.has(index)}
+                    onChange={() => handleCheckboxChange(index)}
+                    className="mr-2"
+                  />
+                  <span className="flex-1">{item.name}: {item.price} Sol</span>
+                </li>
+              ))}
+            </ul>
 
-          <h2 className="text-lg md:text-xl font-semibold mb-2">Total Price: {totalPrice.toFixed(2)} Sol</h2>
-          {/* Lazy-loaded payment component */}
-          <Suspense fallback={<Lazyload />}>
+            <h2 className="text-lg md:text-xl font-semibold mb-2">Total Price: {totalPrice.toFixed(2)} Sol</h2>
+            {/* Lazy-loaded payment component */}
             <div className="flex justify-center mt-6">
               <Payment totalPrice={totalPrice} recipientAddress={recipientAddress} /> {/* Pass recipient address */}
             </div>
-          </Suspense>
-        </div>
+          </div>
+        </Suspense>
       </div>
     </SolanaWalletProvider>
   );
