@@ -26,44 +26,48 @@ const Payment: FC<PaymentProps> = ({ totalPrice, recipientAddress }) => {
       alert('Please connect your wallet to proceed with payment.');
       return;
     }
-
+  
     if (!recipientAddress) {
       alert('Recipient wallet address is missing.');
       return;
     }
-
-    setIsProcessing(true);
-
+  
     try {
+      const recipientPubkey = new PublicKey(recipientAddress); // User A's address
+      const appPubkey = new PublicKey(appWalletAddress); // Solwish app's wallet
+  
+      const senderBalance = await connection.getBalance(publicKey);
       const roundedTotalPrice = parseFloat(totalPrice.toFixed(2));
       const lamportsTotal = roundedTotalPrice * 1e9; // Convert total price (SOL) to lamports
       const feeLamports = 0.005 * 1e9; // 0.005 SOL fee to Solwish app
       const lamportsToSend = lamportsTotal - feeLamports; // Remaining amount to send to User A
-
-      const recipientPubkey = new PublicKey(recipientAddress); // User A's address
-      const appPubkey = new PublicKey(appWalletAddress); // Solwish app's wallet
-
-      // Fetch the latest blockhash for transaction confirmation
+  
+      if (senderBalance < lamportsTotal) {
+        alert('Insufficient balance to complete the transaction.');
+        return;
+      }
+  
+      // Fetch the latest blockhash
       const latestBlockhash = await connection.getLatestBlockhash();
-
-      // Create transaction to send SOL to User A and fee to Solwish app wallet
+  
+      // Create transaction
       const transaction = new Transaction().add(
         SystemProgram.transfer({
-          fromPubkey: publicKey, // Sender (User B)
-          toPubkey: recipientPubkey, // Recipient (User A)
-          lamports: lamportsToSend, // Amount to send to User A
+          fromPubkey: publicKey,
+          toPubkey: recipientPubkey,
+          lamports: lamportsToSend,
         }),
         SystemProgram.transfer({
-          fromPubkey: publicKey, // Sender (User B)
-          toPubkey: appPubkey, // Solwish app's wallet
-          lamports: feeLamports, // Fee sent to Solwish app's wallet
+          fromPubkey: publicKey,
+          toPubkey: appPubkey,
+          lamports: feeLamports,
         })
       );
-
+  
       // Send the transaction
       const signature = await sendTransaction(transaction, connection);
-
-      // Confirm the transaction with blockhash and lastValidBlockHeight
+  
+      // Confirm the transaction
       await connection.confirmTransaction(
         {
           signature,
@@ -72,7 +76,7 @@ const Payment: FC<PaymentProps> = ({ totalPrice, recipientAddress }) => {
         },
         'finalized' // Commitment level
       );
-
+  
       alert(`Payment successful! Transaction signature: ${signature}`);
     } catch (error) {
       console.error('Payment failed:', error);
