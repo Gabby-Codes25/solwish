@@ -15,7 +15,7 @@ require('@solana/wallet-adapter-react-ui/styles.css');
 
 const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter()];
-  const endpoint = clusterApiUrl('mainnet-beta'); // Correct endpoint setup
+  const endpoint = clusterApiUrl('devnet'); // Correct endpoint setup
 
   return (
     <ConnectionProvider endpoint={endpoint}>
