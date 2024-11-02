@@ -16,6 +16,7 @@ import { clusterApiUrl } from '@solana/web3.js';
 
 require('@solana/wallet-adapter-react-ui/styles.css');
 
+// wallet section
 const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter()];
   //const endpoint = clusterApiUrl("mainnet-beta");
