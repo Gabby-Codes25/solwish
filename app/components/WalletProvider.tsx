@@ -1,4 +1,7 @@
 // walletprovider.tsx
+
+"use client";
+
 import { FC, ReactNode } from 'react';
 import {
   ConnectionProvider,
@@ -15,7 +18,8 @@ require('@solana/wallet-adapter-react-ui/styles.css');
 
 const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const wallets = [new PhantomWalletAdapter(), new SolflareWalletAdapter()];
-  const endpoint = clusterApiUrl("devnet");
+  //const endpoint = clusterApiUrl("mainnet-beta");
+  const endpoint = "https://solana-mainnet.g.alchemy.com/v2/8FNNjvoiditNA8vk59sgxuwD2peNAj4o";
 
   return (
     <ConnectionProvider endpoint={endpoint}>
